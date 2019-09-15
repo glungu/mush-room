@@ -14,16 +14,16 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MultipartUploader {
 
-    private static final String BASE_URL = "http://ac11b019.ngrok.io/";
+    private static final String BASE_URL = "https://edc72daf.ngrok.io";
     private static Retrofit retrofit;
 
     public static Retrofit getRetrofitClient() {
         if (retrofit == null) {
 
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                    .connectTimeout(30, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
-                    .writeTimeout(30, TimeUnit.SECONDS)
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .writeTimeout(60, TimeUnit.SECONDS)
                     .build();
 
             retrofit = new Retrofit.Builder()

@@ -1,12 +1,16 @@
 package org.lungen.mushroom;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -19,6 +23,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -51,14 +56,18 @@ public class MainActivity extends AppCompatActivity {
 
         Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (pictureIntent.resolveActivity(getPackageManager()) != null) {
+            /*
             File tempFile = createTempFile();
             tempFilePath = tempFile.getAbsolutePath();
             if (tempFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this,
                         "org.lungen.mushroom.provider", tempFile);
                 pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                pictureIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 200000);
                 startActivityForResult(pictureIntent, REQUEST_CAPTURE_IMAGE);
             }
+            */
+            startActivityForResult(pictureIntent, REQUEST_CAPTURE_IMAGE);
         }
     }
 
@@ -67,16 +76,36 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
             // without setting file URI in intent's extra
-            /*
             if (data != null && data.getExtras() != null) {
                 Bitmap imageBitmap = (Bitmap) data.getExtras().get("data");
                 ImageView imgView = findViewById(R.id.imgView);
+                imgView.setBackgroundColor(Color.argb(0, 0, 0, 0));
                 imgView.setImageBitmap(imageBitmap);
-            }
-            */
 
+                // save to file
+                File tempFile = createTempFile();
+                tempFilePath = tempFile.getAbsolutePath();
+                FileOutputStream outputStream = null;
+                try {
+                    outputStream = new FileOutputStream(tempFile);
+                    // PNG is a lossless format, the compression factor (100) is ignored
+                    imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        if (outputStream != null) {
+                            outputStream.close();
+                        }
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                }
+            }
+            /*
             ImageView imgView = findViewById(R.id.imgView);
             Glide.with(this).load(tempFilePath).into(imgView);
+             */
         }
 
     }
@@ -92,6 +121,9 @@ public class MainActivity extends AppCompatActivity {
             if (tempFileToUpload.length() <= 0) {
                 throw new RuntimeException("File: " + tempFilePath + ", length: " + tempFilePath.length());
             }
+
+            final Button buttonAnalyze = findViewById(R.id.buttonAnalyze);
+            buttonAnalyze.setText("Analyzing...");
 
             MultipartUploader.uploadToServer(tempFilePath, new Callback() {
                 @Override
@@ -122,6 +154,8 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         e.printStackTrace();
                         textToShow.append(e.getMessage());
+                    } finally {
+                        buttonAnalyze.setText("Analyze Image");
                     }
 
                     TextView resultTextView = findViewById(R.id.resultTextView);
@@ -130,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Call call, Throwable t) {
-                    TextView textView = findViewById(R.id.textView);
+                    TextView textView = findViewById(R.id.resultTextView);
                     textView.setText("Error:" + t.getMessage());
                 }
             });

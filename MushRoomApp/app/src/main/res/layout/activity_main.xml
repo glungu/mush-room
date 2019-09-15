@@ -38,12 +38,13 @@
         android:layout_height="200dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
+        android:background="#0D8BC34A"
+        android:cropToPadding="true"
         app:layout_constraintBottom_toTopOf="@+id/buttonAnalyze"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonStartCamera"
-        app:srcCompat="?attr/panelBackground" />
+        app:layout_constraintTop_toBottomOf="@+id/buttonStartCamera" />
 
     <Button
         android:id="@+id/buttonAnalyze"
