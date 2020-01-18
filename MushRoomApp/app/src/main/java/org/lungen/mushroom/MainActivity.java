@@ -1,23 +1,23 @@
 package org.lungen.mushroom;
 
-import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.MediaStore;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
-
-import com.bumptech.glide.Glide;
+import androidx.preference.PreferenceManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,10 +33,13 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+                          implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final int REQUEST_CAPTURE_IMAGE = 1;
     private String tempFilePath;
+
+    public static String serverURL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +49,56 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.setThreadPolicy(policy);
 
         setContentView(R.layout.activity_main);
+
+        setupSharedPreferences();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        // R.menu.settings_menu:
+        // R: 'res' resource directory
+        // menu: 'menu' sub-directory of the resource directory
+        // settings_menu: 'settings_menu.xml' resource file
+        menuInflater.inflate(R.menu.settings_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            // Main activity is parent of Settings activity (see AndroidManifest.xml)
+            // Pressing 'Back' from child will go back to parent activity
+            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals("server_url")) {
+            serverURL = sharedPreferences.getString(
+                    getResources().getString(R.string.pref_server_url_key),
+                    getResources().getString(R.string.settings_server_url_default));
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    private void setupSharedPreferences() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        serverURL = sharedPreferences.getString(
+                getResources().getString(R.string.pref_server_url_key),
+                getResources().getString(R.string.settings_server_url_default));
     }
 
     /** Called when the user taps the Start Camera button */

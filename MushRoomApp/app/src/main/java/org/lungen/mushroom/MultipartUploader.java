@@ -14,11 +14,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MultipartUploader {
 
-    private static final String BASE_URL = "https://a93bef14.ngrok.io";
     private static Retrofit retrofit;
 
     public static Retrofit getRetrofitClient() {
-        if (retrofit == null) {
+        if (retrofit == null || !MainActivity.serverURL.equals(retrofit.baseUrl())) {
 
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
                     .connectTimeout(60, TimeUnit.SECONDS)
@@ -27,7 +26,7 @@ public class MultipartUploader {
                     .build();
 
             retrofit = new Retrofit.Builder()
-                    .baseUrl(BASE_URL)
+                    .baseUrl(MainActivity.serverURL)
                     .client(okHttpClient)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
@@ -40,14 +39,21 @@ public class MultipartUploader {
     public static void uploadToServer(String filePath, Callback callback) {
         Retrofit retrofit = getRetrofitClient();
         MultipartUploaderAPI uploaderAPI = retrofit.create(MultipartUploaderAPI.class);
+
         //Create a file object using file path
         File file = new File(filePath);
+
         // Create a request body with file and image media type
         RequestBody fileReqBody = RequestBody.create(MediaType.parse("image/*"), file);
+
         // Create MultipartBody.Part using file request-body,file name and part name
-        MultipartBody.Part part = MultipartBody.Part.createFormData("file", file.getName(), fileReqBody);
+        MultipartBody.Part part = MultipartBody.Part.createFormData(
+                "file", file.getName(), fileReqBody);
+
         // Create request body with text description and text media type
-        RequestBody description = RequestBody.create(MediaType.parse("text/plain"), "image-type");
+        RequestBody description = RequestBody.create(
+                MediaType.parse("text/plain"), "image-type");
+
         // Create the Call object
         Call call = uploaderAPI.uploadImage(part, description);
         call.enqueue(callback);
