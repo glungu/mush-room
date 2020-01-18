@@ -14,7 +14,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MultipartUploader {
 
-    private static final String BASE_URL = "https://edc72daf.ngrok.io";
+    private static final String BASE_URL = "https://a93bef14.ngrok.io";
     private static Retrofit retrofit;
 
     public static Retrofit getRetrofitClient() {

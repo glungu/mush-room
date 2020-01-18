@@ -128,35 +128,50 @@ public class MainActivity extends AppCompatActivity {
             MultipartUploader.uploadToServer(tempFilePath, new Callback() {
                 @Override
                 public void onResponse(Call call, Response response) {
-                    StringBuilder textToShow = new StringBuilder();
+                    SortedMap<Double, String> results = new TreeMap<>();
+                    String errorMsg = null;
+
                     try {
                         String content = ((ResponseBody) response.body()).string();
                         System.out.println("### Response body: \n" + content);
                         JSONObject json = new JSONObject(content);
 
-                        SortedMap<Double, String> results = new TreeMap<>();
                         JSONArray predictions = json.getJSONArray("predictions");
                         for (int i = 0; i < predictions.length(); i++) {
                             JSONArray p = (JSONArray) predictions.get(i);
                             results.put(p.getDouble(1), p.getString(0));
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        errorMsg = e.getMessage();
+                    } finally {
+                        buttonAnalyze.setText("Analyze Image");
+                    }
 
-                        Double maxValue1 = results.lastKey();
+                    StringBuilder textToShow = new StringBuilder();
+
+                    Double maxValue1 = results.lastKey();
+                    if (maxValue1 < 0.5) {
+                        textToShow.append("Не очень похоже на грибы").append('\n')
+                                .append(results.get(maxValue1)).append(": ")
+                                .append(Math.round(maxValue1 * 100)).append("%");
+                    } else {
                         textToShow.append(results.get(maxValue1)).append(": ")
                                 .append(Math.round(maxValue1 * 100)).append("%");
                         results.remove(maxValue1);
 
                         Double maxValue2 = results.lastKey();
-                        textToShow.append("\n")
-                                .append(results.get(maxValue2)).append(": ")
-                                .append(Math.round(maxValue2 * 100)).append("%");
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        textToShow.append(e.getMessage());
-                    } finally {
-                        buttonAnalyze.setText("Analyze Image");
+                        if (maxValue1 - maxValue2 < 0.2) {
+                            textToShow.append("\n")
+                                    .append(results.get(maxValue2)).append(": ")
+                                    .append(Math.round(maxValue2 * 100)).append("%");
+                        }
                     }
+
+
+
+
+
 
                     TextView resultTextView = findViewById(R.id.resultTextView);
                     resultTextView.setText(textToShow.toString());
